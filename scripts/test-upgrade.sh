@@ -50,8 +50,7 @@ fi
 #       liberty install. This won't cause any problems since there aren't any new
 #       secret variables in mitaka that are not defined in liberty.
 if [[ -f "/etc/openstack_deploy/user_extras_secrets.yml" ]]; then
-  mv /etc/openstack_deploy/user_extras_secrets.yml \
-     /etc/openstack_deploy/user_rpco_secrets.yml
+  /opt/rpc-openstack/scripts/update-secrets.sh
 fi
 if [[ -f "/etc/openstack_deploy/user_secrets.yml" ]]; then
   mv /etc/openstack_deploy/user_secrets.yml \
