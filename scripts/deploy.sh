@@ -48,8 +48,8 @@ ansible-galaxy remove --roles-path /opt/rpc-openstack/rpcd/playbooks/roles/ ceph
 ansible-galaxy install --role-file=/opt/rpc-openstack/ansible-role-requirements.yml --force \
                            --roles-path=/opt/rpc-openstack/rpcd/playbooks/roles
 
-# Enable playbook callbacks from OSA to display playbook statistics
-grep -q callback_plugins playbooks/ansible.cfg || sed -i '/\[defaults\]/a callback_plugins = plugins/callbacks' playbooks/ansible.cfg
+# Move ansible.cfg to /etc/ansible
+cp $RPCD_DIR/playbooks/ansible.cfg /etc/ansible/
 
 # bootstrap the AIO
 if [[ "${DEPLOY_AIO}" == "yes" ]]; then
@@ -67,6 +67,11 @@ if [[ "${DEPLOY_AIO}" == "yes" ]]; then
   export DEPLOY_HAPROXY="yes"
   if [[ ! -d /etc/openstack_deploy/ ]]; then
     ./scripts/bootstrap-aio.sh
+
+    # Create env.d directory so we can add our own configs
+    # See: https://review.openstack.org/#/c/332595/
+    mkdir -p /etc/openstack_deploy/env.d
+
     # move OSA variables file to AIO location.
     mv /etc/openstack_deploy/user_variables.yml /etc/openstack_deploy/user_osa_aio_variables.yml
     pushd ${RPCD_DIR}
@@ -186,11 +191,6 @@ if [[ "${DEPLOY_OA}" == "yes" ]]; then
   else
     run_ansible setup-hosts.yml
   fi
-
-  # ensure correct pip.conf
-  pushd ${RPCD_DIR}/playbooks/
-    run_ansible pip-lockdown.yml
-  popd
 
   if [[ "$DEPLOY_CEPH" == "yes" ]]; then
     pushd ${RPCD_DIR}/playbooks/
